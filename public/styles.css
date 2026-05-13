@@ -477,33 +477,96 @@ footer a:hover { color: var(--fg); }
 
 /* API access card — same card chrome, with a monospace code block. */
 .api-card { margin-top: 16px; }
-.api-snippet {
-  margin: 4px 0 18px;
+.api-snippet,
+.code-block,
+.json-block,
+.header-block {
+  margin: 10px 0 18px;
   padding: 14px 16px 14px 24px;
   background: #02030c;
   border: 1px solid var(--border-strong);
-  border-left: 3px solid var(--accent);
   border-radius: 12px;
   overflow-x: auto;
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: 12.5px;
   line-height: 1.7;
   color: var(--fg);
+  position: relative;
 }
-.api-snippet code { background: transparent; padding: 0; color: inherit; white-space: pre; }
-.api-snippet .sn-cmd  { color: var(--fg); font-weight: 600; }
-.api-snippet .sn-flag { color: var(--fg-dim); }
-.api-snippet .sn-url  { color: var(--accent-2); }
-.api-snippet .sn-str  { color: var(--fg); }
-.api-snippet .sn-tok  { color: var(--fg-dim); font-style: italic; border-bottom: 1px dotted var(--border-strong); }
-.api-snippet .sn-cont { color: var(--fg-dim); opacity: 0.5; }
+.api-snippet { border-left: 3px solid var(--accent); }
+
+/* Shell command: cyan left rail, $ prompt prefix on the first line */
+.code-block {
+  border-left: 3px solid var(--accent);
+  padding-left: 16px;
+}
+.code-block::before {
+  content: "shell";
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.code-block code::before {
+  content: "$ ";
+  color: var(--fg-dim);
+  user-select: none;
+}
+
+/* JSON body: violet left rail, json label */
+.json-block {
+  border-left: 3px solid #a78bfa;
+  padding-left: 16px;
+}
+.json-block::before {
+  content: "json";
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+/* HTTP header line: subtle amber rail, header label */
+.header-block {
+  border-left: 3px solid #fbbf24;
+  padding-left: 16px;
+}
+.header-block::before {
+  content: "http header";
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.api-snippet code,
+.code-block code,
+.json-block code,
+.header-block code { background: transparent; padding: 0; color: inherit; white-space: pre; }
+
+.api-snippet .sn-cmd,  .code-block .sn-cmd,  .json-block .sn-cmd,  .header-block .sn-cmd  { color: var(--fg); font-weight: 600; }
+.api-snippet .sn-flag, .code-block .sn-flag, .json-block .sn-flag, .header-block .sn-flag { color: var(--fg-dim); }
+.api-snippet .sn-url,  .code-block .sn-url,  .json-block .sn-url,  .header-block .sn-url  { color: var(--accent-2); }
+.api-snippet .sn-str,  .code-block .sn-str,  .json-block .sn-str,  .header-block .sn-str  { color: var(--fg); }
+.api-snippet .sn-tok,  .code-block .sn-tok,  .json-block .sn-tok,  .header-block .sn-tok  { color: var(--fg-dim); font-style: italic; border-bottom: 1px dotted var(--border-strong); }
+.api-snippet .sn-cont, .code-block .sn-cont, .json-block .sn-cont, .header-block .sn-cont { color: var(--fg-dim); opacity: 0.5; }
+.json-block .sn-key { color: var(--accent-2); }
 .api-actions { margin-top: 0; }
 .api-actions a { color: var(--accent-2); text-decoration: none; border-bottom: 1px dashed var(--border-strong); }
 .api-actions a:hover { color: var(--accent); border-bottom-color: var(--accent); }
 
 /* API docs page — reuses .card + .api-snippet from elsewhere; adds
    list, table, and inline-code styles specific to the docs page. */
-.api-doc-card { margin-top: 16px; }
+.api-doc-card { margin-top: 32px; }
+.api-doc-card:first-of-type { margin-top: 24px; }
 .api-doc-card .card-title .card-subtle { color: var(--fg-dim); font-weight: 500; font-size: 13px; margin-left: 6px; }
 .api-list {
   margin: 0 0 0 18px;

@@ -77,8 +77,8 @@
         <p class="contact-text">
           Send the key as either of these headers on the drip endpoints:
         </p>
-        <pre class="api-snippet"><code><span class="sn-flag">Authorization:</span> Bearer <span class="sn-tok">pk_yourkeyhere</span></code></pre>
-        <pre class="api-snippet"><code><span class="sn-flag">X-API-Key:</span> <span class="sn-tok">pk_yourkeyhere</span></code></pre>
+        <pre class="header-block"><code><span class="sn-flag">Authorization:</span> Bearer <span class="sn-tok">pk_yourkeyhere</span></code></pre>
+        <pre class="header-block"><code><span class="sn-flag">X-API-Key:</span> <span class="sn-tok">pk_yourkeyhere</span></code></pre>
         <p class="contact-text">
           A request that presents a valid, enabled key bypasses
           Cloudflare Turnstile entirely. Without a key, the drip
@@ -92,8 +92,8 @@
         <p class="contact-text">
           Body:
         </p>
-        <pre class="api-snippet"><code>{
-  <span class="sn-str">"address"</span>: <span class="sn-str">"<span class="sn-tok">0xYourAddressHere</span>"</span>
+        <pre class="json-block"><code>{
+  <span class="sn-key">"address"</span>: <span class="sn-str">"<span class="sn-tok">0xYourAddressHere</span>"</span>
 }</code></pre>
         <p class="contact-text">
           tFIL accepts any of <code>0x…</code>, <code>t410f…</code>,
@@ -104,17 +104,17 @@
         <p class="contact-text" style="margin-top: 14px;">
           Example (tFIL):
         </p>
-        <pre class="api-snippet"><code><span class="sn-cmd">curl</span> <span class="sn-flag">-X</span> POST <span class="sn-url">https://faucet.reiers.io/api/drip/fil</span> <span class="sn-cont">\</span>
+        <pre class="code-block"><code><span class="sn-cmd">curl</span> <span class="sn-flag">-X</span> POST <span class="sn-url">https://faucet.reiers.io/api/drip/fil</span> <span class="sn-cont">\</span>
   <span class="sn-flag">-H</span> <span class="sn-str">'content-type: application/json'</span> <span class="sn-cont">\</span>
   <span class="sn-flag">-H</span> <span class="sn-str">'Authorization: Bearer <span class="sn-tok">pk_yourkeyhere</span>'</span> <span class="sn-cont">\</span>
   <span class="sn-flag">-d</span> <span class="sn-str">'{"address":"<span class="sn-tok">0xYourAddressHere</span>"}'</span></code></pre>
         <p class="contact-text">Success response:</p>
-        <pre class="api-snippet"><code>{
-  <span class="sn-str">"ok"</span>: true,
-  <span class="sn-str">"txHash"</span>: <span class="sn-str">"0x…"</span>,
-  <span class="sn-str">"verified"</span>: true,
-  <span class="sn-str">"amount"</span>: <span class="sn-str">"5000000000000000000"</span>,
-  <span class="sn-str">"asset"</span>: <span class="sn-str">"fil"</span>
+        <pre class="json-block"><code>{
+  <span class="sn-key">"ok"</span>: true,
+  <span class="sn-key">"txHash"</span>: <span class="sn-str">"0x…"</span>,
+  <span class="sn-key">"verified"</span>: true,
+  <span class="sn-key">"amount"</span>: <span class="sn-str">"5000000000000000000"</span>,
+  <span class="sn-key">"asset"</span>: <span class="sn-str">"fil"</span>
 }</code></pre>
         <p class="contact-text">
           <code>verified: true</code> means the server confirmed
@@ -169,15 +169,15 @@
           Every 429 includes <code>retryAtUnix</code> (epoch seconds) so
           a retry loop knows exactly when to come back:
         </p>
-        <pre class="api-snippet"><code>{
-  <span class="sn-str">"ok"</span>: false,
-  <span class="sn-str">"error"</span>: <span class="sn-str">"api_key_rate_limited"</span>,
-  <span class="sn-str">"scope"</span>: <span class="sn-str">"api_key"</span>,
-  <span class="sn-str">"used"</span>: 50,
-  <span class="sn-str">"max"</span>: 50,
-  <span class="sn-str">"windowSec"</span>: 86400,
-  <span class="sn-str">"retryAfterSec"</span>: 41832,
-  <span class="sn-str">"retryAtUnix"</span>: 1778709058
+        <pre class="json-block"><code>{
+  <span class="sn-key">"ok"</span>: false,
+  <span class="sn-key">"error"</span>: <span class="sn-str">"api_key_rate_limited"</span>,
+  <span class="sn-key">"scope"</span>: <span class="sn-str">"api_key"</span>,
+  <span class="sn-key">"used"</span>: 50,
+  <span class="sn-key">"max"</span>: 50,
+  <span class="sn-key">"windowSec"</span>: 86400,
+  <span class="sn-key">"retryAfterSec"</span>: 41832,
+  <span class="sn-key">"retryAtUnix"</span>: 1778709058
 }</code></pre>
       </section>
 
