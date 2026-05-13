@@ -479,10 +479,10 @@ footer a:hover { color: var(--fg); }
 .api-card { margin-top: 16px; }
 .api-snippet {
   margin: 4px 0 18px;
-  padding: 14px 16px 14px 18px;
+  padding: 14px 16px 14px 24px;
   background: #02030c;
   border: 1px solid var(--border-strong);
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid rgba(56, 189, 248, 0.5);
   border-radius: 12px;
   overflow-x: auto;
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -491,12 +491,12 @@ footer a:hover { color: var(--fg); }
   color: var(--fg);
 }
 .api-snippet code { background: transparent; padding: 0; color: inherit; white-space: pre; }
-.api-snippet .sn-cmd  { color: #f0abfc; font-weight: 600; }
+.api-snippet .sn-cmd  { color: var(--fg); font-weight: 600; }
 .api-snippet .sn-flag { color: var(--fg-muted); }
 .api-snippet .sn-url  { color: var(--accent-2); }
-.api-snippet .sn-str  { color: #facc15; }
-.api-snippet .sn-tok  { color: #a3e635; }
-.api-snippet .sn-cont { color: var(--fg-dim); }
+.api-snippet .sn-str  { color: var(--fg); }
+.api-snippet .sn-tok  { color: var(--fg-dim); font-style: italic; border-bottom: 1px dotted var(--border-strong); }
+.api-snippet .sn-cont { color: var(--fg-dim); opacity: 0.5; }
 .api-actions { margin-top: 0; }
 .api-actions a { color: var(--accent-2); text-decoration: none; border-bottom: 1px dashed var(--border-strong); }
 .api-actions a:hover { color: var(--accent); border-bottom-color: var(--accent); }
