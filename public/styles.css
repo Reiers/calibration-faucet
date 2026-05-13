@@ -521,10 +521,11 @@ footer a:hover { color: var(--fg); }
 }
 .api-table th,
 .api-table td {
-  padding: 8px 12px;
+  padding: 12px 12px;
   text-align: left;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   color: var(--fg-muted);
+  vertical-align: top;
 }
 .api-table th {
   font-weight: 600;
@@ -562,3 +563,38 @@ footer a:hover { color: var(--fg); }
   border-bottom: 1px dashed var(--border-strong);
 }
 .api-doc-card .contact-text a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* API page hero meta chips. */
+.api-hero .api-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 0;
+  justify-content: center;
+}
+.api-hero .api-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: var(--fg-muted);
+}
+.api-hero .api-chip-label {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 10.5px;
+  color: var(--fg-dim);
+  font-weight: 600;
+}
+.api-hero .api-chip code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--accent-2);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+}
