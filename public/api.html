@@ -111,6 +111,15 @@
           Same caps as <a href="#public-drip">/api/public/drip/*</a>:
           per-IP and per-address windows apply identically.
         </p>
+        <p class="contact-text">
+          The response is streamed: the JSON array opens immediately
+          and each element is written as soon as its on-chain
+          transaction settles. Full dual-drip wall time is typically
+          60-90 seconds, so set the client request timeout to at
+          least <strong>120 seconds</strong>. Use
+          <code>?assets=fil</code> or <code>?assets=usdfc</code> to
+          drip just one token and cut wall time roughly in half.
+        </p>
       </section>
 
       <!-- API key -->
