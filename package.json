@@ -29,6 +29,12 @@
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild"
+    ]
+  },
   "engines": {
     "node": ">=20"
   },
