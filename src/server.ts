@@ -581,10 +581,24 @@ async function main() {
     { asset: 'usdfc' as Asset, label: 'CalibnetUSDFC' },
   ]
   app.get('/api/claim_token_all', async (req, reply) => {
+    // Keep the connection alive while we do back-to-back on-chain
+    // transactions; a full dual-drip can take ~60s wall time.
+    reply.raw.setTimeout(120_000)
+    reply.header('Connection', 'keep-alive')
+
     const ip = req.ip
     const addr = String(
       (req.query as { address?: string }).address ?? '',
     ).trim()
+    // Optional ?assets=fil,usdfc filter. Default = both. Lets callers
+    // skip the slow asset when they only need one (e.g. SynapS3's
+    // 'wallet fund-testnet' wanting tFIL only on first run).
+    const assetsParam = String(
+      (req.query as { assets?: string }).assets ?? 'fil,usdfc',
+    ).toLowerCase()
+    const wantAssets = new Set(
+      assetsParam.split(',').map((s) => s.trim()).filter(Boolean),
+    )
     if (!addr) {
       return reply.code(400).send([
         {
@@ -620,7 +634,20 @@ async function main() {
     let anyOk = false
     let anyFail = false
 
-    for (const { asset, label } of chainSafeAssetMap) {
+    const requestedAssets = chainSafeAssetMap.filter((a) =>
+      wantAssets.has(a.asset),
+    )
+    if (requestedAssets.length === 0) {
+      return reply.code(400).send([
+        {
+          faucetInfo: 'CalibnetFIL',
+          error: {
+            message: `unknown assets in ?assets=${assetsParam}; valid values are 'fil' and 'usdfc'`,
+          },
+        },
+      ])
+    }
+    for (const { asset, label } of requestedAssets) {
       // USDFC requires an 0x or t410f recipient.
       if (asset === 'usdfc' && recipient.kind === 'filecoin') {
         results.push({
