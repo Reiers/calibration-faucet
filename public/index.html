@@ -34,6 +34,7 @@
         <a href="/">Faucet</a>
         <a href="/status">Status</a>
         <a href="#tools">Tools</a>
+        <a href="#api">API</a>
         <a class="nav-soon" data-tip="coming soon" aria-disabled="true" tabindex="-1">DataCap</a>
         <a href="#contact">Contact</a>
         <a href="https://github.com/Reiers/plumbline-faucet" target="_blank" rel="noopener">GitHub</a>
@@ -110,6 +111,27 @@
           <button type="submit" class="ghost">Convert</button>
         </form>
         <output id="conv-output" class="converter-output" aria-live="polite"></output>
+      </section>
+
+      <!-- API access -->
+      <section class="card api-card" id="api" aria-labelledby="api-title">
+        <h2 class="card-title" id="api-title">API access <span class="card-subtle">for CLI &amp; CI</span></h2>
+        <p class="contact-text">
+          Building tooling or running integration tests on Calibration?
+          The drip endpoints accept an API key as a substitute for the
+          web captcha, so you can hit them from <code>curl</code>,
+          <code>sptool</code>, GitHub Actions, or your own test runner.
+        </p>
+        <pre class="api-snippet"><code>curl -X POST https://faucet.reiers.io/api/drip/fil \
+  -H 'content-type: application/json' \
+  -H 'Authorization: Bearer pk_yourkeyhere' \
+  -d '{"address":"0xYourAddressHere"}'</code></pre>
+        <p class="contact-text api-actions">
+          Full reference (errors, rate limits, every endpoint):
+          <a href="https://github.com/Reiers/plumbline-faucet/blob/main/docs/api.md" target="_blank" rel="noopener">docs/api.md</a>.
+          Keys are issued out-of-band — ping <code>@Reiers</code> on
+          Filecoin Slack with your project name + expected usage.
+        </p>
       </section>
 
       <!-- Recent drips -->

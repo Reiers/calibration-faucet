@@ -474,3 +474,22 @@ footer a:hover { color: var(--fg); }
   padding: 0;
   margin: 0;
 }
+
+/* API access card — same card chrome, with a monospace code block. */
+.api-card { margin-top: 16px; }
+.api-snippet {
+  margin: 4px 0 14px;
+  padding: 14px 16px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow-x: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--fg);
+}
+.api-snippet code { background: transparent; padding: 0; color: inherit; white-space: pre; }
+.api-actions { margin-top: 0; }
+.api-actions a { color: var(--accent-2); text-decoration: none; border-bottom: 1px dashed var(--border-strong); }
+.api-actions a:hover { color: var(--accent); border-bottom-color: var(--accent); }
