@@ -482,7 +482,7 @@ footer a:hover { color: var(--fg); }
   padding: 14px 16px 14px 24px;
   background: #02030c;
   border: 1px solid var(--border-strong);
-  border-left: 3px solid rgba(56, 189, 248, 0.5);
+  border-left: 3px solid var(--accent);
   border-radius: 12px;
   overflow-x: auto;
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -492,7 +492,7 @@ footer a:hover { color: var(--fg); }
 }
 .api-snippet code { background: transparent; padding: 0; color: inherit; white-space: pre; }
 .api-snippet .sn-cmd  { color: var(--fg); font-weight: 600; }
-.api-snippet .sn-flag { color: var(--fg-muted); }
+.api-snippet .sn-flag { color: var(--fg-dim); }
 .api-snippet .sn-url  { color: var(--accent-2); }
 .api-snippet .sn-str  { color: var(--fg); }
 .api-snippet .sn-tok  { color: var(--fg-dim); font-style: italic; border-bottom: 1px dotted var(--border-strong); }
