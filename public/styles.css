@@ -478,18 +478,25 @@ footer a:hover { color: var(--fg); }
 /* API access card — same card chrome, with a monospace code block. */
 .api-card { margin-top: 16px; }
 .api-snippet {
-  margin: 4px 0 14px;
-  padding: 14px 16px;
-  background: var(--bg-base);
-  border: 1px solid var(--border);
+  margin: 4px 0 18px;
+  padding: 14px 16px 14px 18px;
+  background: #02030c;
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--accent);
   border-radius: 12px;
   overflow-x: auto;
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-size: 12.5px;
-  line-height: 1.55;
+  line-height: 1.7;
   color: var(--fg);
 }
 .api-snippet code { background: transparent; padding: 0; color: inherit; white-space: pre; }
+.api-snippet .sn-cmd  { color: #f0abfc; font-weight: 600; }
+.api-snippet .sn-flag { color: var(--fg-muted); }
+.api-snippet .sn-url  { color: var(--accent-2); }
+.api-snippet .sn-str  { color: #facc15; }
+.api-snippet .sn-tok  { color: #a3e635; }
+.api-snippet .sn-cont { color: var(--fg-dim); }
 .api-actions { margin-top: 0; }
 .api-actions a { color: var(--accent-2); text-decoration: none; border-bottom: 1px dashed var(--border-strong); }
 .api-actions a:hover { color: var(--accent); border-bottom-color: var(--accent); }

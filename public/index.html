@@ -122,10 +122,10 @@
           web captcha, so you can hit them from <code>curl</code>,
           <code>sptool</code>, GitHub Actions, or your own test runner.
         </p>
-        <pre class="api-snippet"><code>curl -X POST https://faucet.reiers.io/api/drip/fil \
-  -H 'content-type: application/json' \
-  -H 'Authorization: Bearer pk_yourkeyhere' \
-  -d '{"address":"0xYourAddressHere"}'</code></pre>
+        <pre class="api-snippet"><code><span class="sn-cmd">curl</span> <span class="sn-flag">-X</span> POST <span class="sn-url">https://faucet.reiers.io/api/drip/fil</span> <span class="sn-cont">\</span>
+  <span class="sn-flag">-H</span> <span class="sn-str">'content-type: application/json'</span> <span class="sn-cont">\</span>
+  <span class="sn-flag">-H</span> <span class="sn-str">'Authorization: Bearer <span class="sn-tok">pk_yourkeyhere</span>'</span> <span class="sn-cont">\</span>
+  <span class="sn-flag">-d</span> <span class="sn-str">'{"address":"<span class="sn-tok">0xYourAddressHere</span>"}'</span></code></pre>
         <p class="contact-text api-actions">
           Full reference (errors, rate limits, every endpoint):
           <a href="https://github.com/Reiers/plumbline-faucet/blob/main/docs/api.md" target="_blank" rel="noopener">docs/api.md</a>.
