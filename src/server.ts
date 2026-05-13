@@ -582,9 +582,24 @@ async function main() {
   ]
   app.get('/api/claim_token_all', async (req, reply) => {
     // Keep the connection alive while we do back-to-back on-chain
-    // transactions; a full dual-drip can take ~60s wall time.
-    reply.raw.setTimeout(120_000)
-    reply.header('Connection', 'keep-alive')
+    // transactions; a full dual-drip can take ~60s wall time, well
+    // past Cloudflare's idle-connection limit. We use a streaming
+    // chunked-transfer response that emits each token result as soon
+    // as it lands; this also keeps the socket warm so the proxy
+    // chain doesn't drop us mid-flight.
+    reply.raw.setTimeout(180_000)
+    reply.raw.setHeader('Content-Type', 'application/json; charset=utf-8')
+    reply.raw.setHeader('Cache-Control', 'no-cache, no-transform')
+    reply.raw.setHeader('Connection', 'keep-alive')
+    reply.raw.setHeader('X-Accel-Buffering', 'no') // tell nginx not to buffer
+    reply.hijack()
+
+    const writeChunk = (s: string): void => {
+      reply.raw.write(s)
+    }
+    const endResponse = (): void => {
+      reply.raw.end()
+    }
 
     const ip = req.ip
     const addr = String(
@@ -600,29 +615,39 @@ async function main() {
       assetsParam.split(',').map((s) => s.trim()).filter(Boolean),
     )
     if (!addr) {
-      return reply.code(400).send([
-        {
-          faucetInfo: 'CalibnetFIL',
-          error: { message: 'missing address query parameter' },
-        },
-        {
-          faucetInfo: 'CalibnetUSDFC',
-          error: { message: 'missing address query parameter' },
-        },
-      ])
+      reply.raw.statusCode = 400
+      writeChunk(
+        JSON.stringify([
+          {
+            faucetInfo: 'CalibnetFIL',
+            error: { message: 'missing address query parameter' },
+          },
+          {
+            faucetInfo: 'CalibnetUSDFC',
+            error: { message: 'missing address query parameter' },
+          },
+        ]),
+      )
+      endResponse()
+      return
     }
     const recipient = classifyRecipient(addr)
     if (recipient.kind === 'invalid') {
-      return reply.code(400).send([
-        {
-          faucetInfo: 'CalibnetFIL',
-          error: { message: `invalid address: ${recipient.reason}` },
-        },
-        {
-          faucetInfo: 'CalibnetUSDFC',
-          error: { message: `invalid address: ${recipient.reason}` },
-        },
-      ])
+      reply.raw.statusCode = 400
+      writeChunk(
+        JSON.stringify([
+          {
+            faucetInfo: 'CalibnetFIL',
+            error: { message: `invalid address: ${recipient.reason}` },
+          },
+          {
+            faucetInfo: 'CalibnetUSDFC',
+            error: { message: `invalid address: ${recipient.reason}` },
+          },
+        ]),
+      )
+      endResponse()
+      return
     }
     const target =
       recipient.kind === 'eth' || recipient.kind === 'delegated'
@@ -630,7 +655,6 @@ async function main() {
         : recipient.original.toLowerCase()
 
     const now = Math.floor(Date.now() / 1000)
-    const results: ChainSafeClaim[] = []
     let anyOk = false
     let anyFail = false
 
@@ -638,19 +662,53 @@ async function main() {
       wantAssets.has(a.asset),
     )
     if (requestedAssets.length === 0) {
-      return reply.code(400).send([
-        {
-          faucetInfo: 'CalibnetFIL',
-          error: {
-            message: `unknown assets in ?assets=${assetsParam}; valid values are 'fil' and 'usdfc'`,
+      reply.raw.statusCode = 400
+      writeChunk(
+        JSON.stringify([
+          {
+            faucetInfo: 'CalibnetFIL',
+            error: {
+              message: `unknown assets in ?assets=${assetsParam}; valid values are 'fil' and 'usdfc'`,
+            },
           },
-        },
-      ])
+        ]),
+      )
+      endResponse()
+      return
     }
+
+    // Streaming envelope: open the array now so the client receives
+    // bytes immediately and the proxy chain knows the connection is
+    // active. Each element is JSON.stringify'd and written as soon as
+    // its on-chain transaction settles. We also push a single ASCII
+    // whitespace byte every 20s while a drip is in flight so the
+    // socket never sits idle long enough for Cloudflare (~30s) or
+    // any other proxy in the path to close it. Whitespace inside a
+    // top-level JSON array is legal and is silently skipped by every
+    // JSON parser including Go's json.Unmarshal (which Lee's client uses).
+    writeChunk('[')
+    let firstElem = true
+    const emit = (claim: ChainSafeClaim): void => {
+      if (!firstElem) writeChunk(',')
+      writeChunk(JSON.stringify(claim))
+      firstElem = false
+    }
+    let heartbeatActive = true
+    const heartbeat = setInterval(() => {
+      if (heartbeatActive) {
+        try {
+          reply.raw.write(' ')
+        } catch {
+          // socket already closed; drip results will still be logged
+          heartbeatActive = false
+        }
+      }
+    }, 20_000)
+    try {
     for (const { asset, label } of requestedAssets) {
       // USDFC requires an 0x or t410f recipient.
       if (asset === 'usdfc' && recipient.kind === 'filecoin') {
-        results.push({
+        emit({
           faucetInfo: label,
           error: {
             message:
@@ -669,7 +727,7 @@ async function main() {
       ) {
         const retryAfterSec =
           cfg.IP_RATE_LIMIT_SEC - (now - ipWin.windowStartUnix)
-        results.push({
+        emit({
           faucetInfo: label,
           error: {
             message: `per-IP rate limit reached, retry after ${retryAfterSec}s`,
@@ -686,7 +744,7 @@ async function main() {
       ) {
         const retryAfterSec =
           cfg.ADDRESS_RATE_LIMIT_SEC - (now - addrWin.windowStartUnix)
-        results.push({
+        emit({
           faucetInfo: label,
           error: {
             message: `per-address rate limit reached, retry after ${retryAfterSec}s`,
@@ -701,7 +759,7 @@ async function main() {
           { reserveProblem, asset, route: 'claim_token_all' },
           'faucet dry',
         )
-        results.push({
+        emit({
           faucetInfo: label,
           error: { message: `faucet dry: ${reserveProblem}` },
         })
@@ -743,14 +801,14 @@ async function main() {
           },
           'public drip ok',
         )
-        results.push({ faucetInfo: label, tx_hash: result.txHash })
+        emit({ faucetInfo: label, tx_hash: result.txHash })
         anyOk = true
       } catch (err) {
         app.log.error(
           { err, asset, route: 'claim_token_all', recipient: target, ip },
           'public drip failed',
         )
-        results.push({
+        emit({
           faucetInfo: label,
           error: { message: `drip failed: ${String(err)}` },
         })
@@ -758,13 +816,21 @@ async function main() {
       }
     }
 
-    // ChainSafe's status convention: 200 if anything succeeded, 4xx if
-    // both failed for client-fixable reasons (we use 429 since the most
-    // common cause is rate-limit), 5xx only on server-side failure.
-    if (!anyOk && anyFail) {
-      reply.code(429)
+    } finally {
+      heartbeatActive = false
+      clearInterval(heartbeat)
     }
-    return results
+    writeChunk(']')
+    endResponse()
+    // anyOk / anyFail are still tracked for the access log even though
+    // status codes can't change mid-stream (the array elements carry
+    // their own error fields, which Lee's parser already handles).
+    if (!anyOk && anyFail) {
+      app.log.info(
+        { route: 'claim_token_all', recipient: target, ip, anyOk, anyFail },
+        'public drip all failed',
+      )
+    }
   })
 
   if (!cfg.TURNSTILE_SECRET) {
