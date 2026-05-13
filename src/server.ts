@@ -16,6 +16,13 @@
 //   GET  /api/recent        last N drips (address + tx hashes only)
 //   POST /api/drip/fil      { address, turnstileToken } → tFIL drip
 //   POST /api/drip/usdfc    { address, turnstileToken } → USDFC drip
+//
+// API key authentication (optional, for CLI / CI integrations):
+//   Send `Authorization: Bearer <key>` or `X-API-Key: <key>` on the
+//   drip endpoints. When a valid, enabled key is present, the request
+//   bypasses Turnstile (no captcha required) and uses the key's own
+//   per-window rate limit instead of the per-IP limit. Per-address
+//   limits still apply. Keys are managed via `pnpm run keygen`.
 
 import Fastify, { type FastifyRequest, type FastifyReply } from 'fastify'
 import cors from '@fastify/cors'
@@ -32,6 +39,7 @@ import { StatsStore } from './stats-store.js'
 import { Drip } from './drip.js'
 import { verifyTurnstile } from './turnstile.js'
 import { classifyRecipient } from './fil-address.js'
+import { ApiKeyStore, type ApiKey } from './api-key-store.js'
 
 const USDFC_DECIMALS = 18
 
@@ -42,7 +50,24 @@ async function main() {
   const cfg = loadConfig()
   const store = new RateLimitStore(cfg.RATE_LIMIT_DB)
   const stats = new StatsStore(store.db)
+  const apiKeys = new ApiKeyStore(store.db)
   const drip = new Drip(cfg)
+
+  // Extract a bearer-style API key from either `X-API-Key` or
+  // `Authorization: Bearer ...`. Returns the raw key string, or null
+  // if no header was present.
+  const extractApiKey = (req: FastifyRequest): string | null => {
+    const headerKey = req.headers['x-api-key']
+    if (typeof headerKey === 'string' && headerKey.trim() !== '') {
+      return headerKey.trim()
+    }
+    const auth = req.headers['authorization']
+    if (typeof auth === 'string') {
+      const m = auth.match(/^\s*Bearer\s+(\S+)\s*$/i)
+      if (m) return m[1]
+    }
+    return null
+  }
 
   const app = Fastify({
     logger: { level: process.env.LOG_LEVEL ?? 'info' },
@@ -104,6 +129,7 @@ async function main() {
       usdfcBalanceWei: state.usdfcBalance.toString(),
       minReserveFil: cfg.MIN_RESERVE_FIL,
       minReserveUsdfc: cfg.MIN_RESERVE_USDFC,
+      apiKeyAuthSupported: true,
     }
   })
 
@@ -209,30 +235,83 @@ async function main() {
         ? recipient.address.toLowerCase()
         : recipient.original.toLowerCase()
 
-    const tsResult = await verifyTurnstile(cfg, parsed.data.turnstileToken ?? '', ip)
-    if (!tsResult.ok) {
-      return reply.code(400).send({ ok: false, error: 'captcha', reason: tsResult.reason })
+    // Resolve API-key authentication first; a valid key bypasses
+    // Turnstile and replaces the IP rate-limit with a per-key window.
+    const presentedKey = extractApiKey(req)
+    let authedKey: ApiKey | null = null
+    if (presentedKey !== null) {
+      const found = apiKeys.get(presentedKey)
+      if (!found) {
+        return reply.code(401).send({
+          ok: false,
+          error: 'invalid_api_key',
+          reason: 'API key is not recognised',
+        })
+      }
+      if (!found.enabled) {
+        return reply.code(401).send({
+          ok: false,
+          error: 'revoked_api_key',
+          reason: 'API key has been revoked',
+        })
+      }
+      authedKey = found
+    }
+
+    if (!authedKey) {
+      const tsResult = await verifyTurnstile(
+        cfg,
+        parsed.data.turnstileToken ?? '',
+        ip,
+      )
+      if (!tsResult.ok) {
+        return reply.code(400).send({ ok: false, error: 'captcha', reason: tsResult.reason })
+      }
     }
 
     const now = Math.floor(Date.now() / 1000)
-    const ipWin = store.windowForIp(ip, asset)
-    if (
-      ipWin &&
-      now - ipWin.windowStartUnix <= cfg.IP_RATE_LIMIT_SEC &&
-      ipWin.count >= cfg.MAX_DRIPS_PER_IP
-    ) {
-      const retryAfterSec = cfg.IP_RATE_LIMIT_SEC - (now - ipWin.windowStartUnix)
-      return reply.code(429).send({
-        ok: false,
-        error: 'ip_rate_limited',
-        scope: 'ip',
-        used: ipWin.count,
-        max: cfg.MAX_DRIPS_PER_IP,
-        windowSec: cfg.IP_RATE_LIMIT_SEC,
-        retryAfterSec,
-        retryAtUnix: now + retryAfterSec,
-      })
+
+    if (authedKey) {
+      const keyWin = apiKeys.windowFor(authedKey.key, asset)
+      if (
+        keyWin &&
+        now - keyWin.windowStartUnix <= authedKey.windowSec &&
+        keyWin.count >= authedKey.maxDripsPerWindow
+      ) {
+        const retryAfterSec =
+          authedKey.windowSec - (now - keyWin.windowStartUnix)
+        return reply.code(429).send({
+          ok: false,
+          error: 'api_key_rate_limited',
+          scope: 'api_key',
+          used: keyWin.count,
+          max: authedKey.maxDripsPerWindow,
+          windowSec: authedKey.windowSec,
+          retryAfterSec,
+          retryAtUnix: now + retryAfterSec,
+        })
+      }
+    } else {
+      const ipWin = store.windowForIp(ip, asset)
+      if (
+        ipWin &&
+        now - ipWin.windowStartUnix <= cfg.IP_RATE_LIMIT_SEC &&
+        ipWin.count >= cfg.MAX_DRIPS_PER_IP
+      ) {
+        const retryAfterSec = cfg.IP_RATE_LIMIT_SEC - (now - ipWin.windowStartUnix)
+        return reply.code(429).send({
+          ok: false,
+          error: 'ip_rate_limited',
+          scope: 'ip',
+          used: ipWin.count,
+          max: cfg.MAX_DRIPS_PER_IP,
+          windowSec: cfg.IP_RATE_LIMIT_SEC,
+          retryAfterSec,
+          retryAtUnix: now + retryAfterSec,
+        })
+      }
     }
+
     const addrWin = store.windowForAddress(target, asset)
     if (
       addrWin &&
@@ -260,7 +339,11 @@ async function main() {
 
     try {
       const result = asset === 'fil' ? await drip.dripFil(recipient) : await drip.dripUsdfc(recipient)
-      store.recordDrip(ip, target, asset, now, cfg.IP_RATE_LIMIT_SEC)
+      if (authedKey) {
+        apiKeys.recordDrip(authedKey.key, asset, now, authedKey.windowSec)
+      } else {
+        store.recordDrip(ip, target, asset, now, cfg.IP_RATE_LIMIT_SEC)
+      }
       stats.recordDrip(
         now,
         target,
@@ -275,6 +358,7 @@ async function main() {
           asset,
           recipient: target,
           ip,
+          apiKey: authedKey?.name ?? null,
           txHash: result.txHash,
           verified: result.verified,
         },

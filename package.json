@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
+    "keygen": "tsx src/keygen.ts",
     "typecheck": "tsc --noEmit",
     "format": "prettier -w src public"
   },

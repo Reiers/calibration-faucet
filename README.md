@@ -41,7 +41,12 @@ POST /api/drip/fil      { address, turnstileToken } → tFIL drip
 POST /api/drip/usdfc    { address, turnstileToken } → USDFC drip
 ```
 
-### Drip request
+Full API reference for CLI / CI integrators: [`docs/api.md`](docs/api.md).
+Web-UI callers use Turnstile; CLI / CI callers should use an API key
+(`Authorization: Bearer <key>`) issued by the operator — see
+[`docs/api.md`](docs/api.md) for the request flow.
+
+### Drip request (browser / captcha)
 
 ```bash
 curl -X POST https://<your-host>/api/drip/fil \
@@ -51,6 +56,19 @@ curl -X POST https://<your-host>/api/drip/fil \
     "turnstileToken": "..."
   }'
 ```
+
+### Drip request (CLI / CI, with API key)
+
+```bash
+curl -X POST https://<your-host>/api/drip/fil \
+  -H 'content-type: application/json' \
+  -H 'Authorization: Bearer pk_yourkeyhere' \
+  -d '{"address": "0x..."}'
+```
+
+An API key replaces the Turnstile captcha and substitutes its own
+per-key rate-limit window for the per-IP limit. Per-address limits
+still apply.
 
 Success:
 
