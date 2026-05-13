@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>API — Plumbline</title>
+    <meta name="description" content="Programmatic API for the Plumbline Calibration faucet — drip tFIL and USDFC from CLI, CI, or test runners." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://rsms.me" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <nav class="nav">
+      <a href="/" class="logo">
+        <svg viewBox="0 0 64 64" width="28" height="28" fill="none" aria-hidden="true">
+          <defs><linearGradient id="navg-api" x1="32" y1="4" x2="32" y2="60" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7dd3fc"/><stop offset="50%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#2563eb"/>
+          </linearGradient></defs>
+          <rect x="20" y="3" width="24" height="3" rx="1.5" fill="#fff" fill-opacity=".9"/>
+          <rect x="31" y="6" width="2" height="22" fill="#fff" fill-opacity=".9"/>
+          <path d="M32 22 C 22 32, 14 41, 14 48 C 14 56.5, 22 60.5, 32 60.5 C 42 60.5, 50 56.5, 50 48 C 50 41, 42 32, 32 22 Z" fill="url(#navg-api)"/>
+          <rect x="22" y="50" width="20" height="3" rx="1.5" fill="#fff" fill-opacity=".95"/>
+        </svg>
+        <span>Plumbline</span>
+      </a>
+      <div class="nav-links">
+        <a href="/">Faucet</a>
+        <a href="/status">Status</a>
+        <a href="/api" aria-current="page">API</a>
+        <a class="nav-soon" data-tip="coming soon" aria-disabled="true" tabindex="-1">DataCap</a>
+        <a href="/#contact">Contact</a>
+        <a href="https://github.com/Reiers/plumbline-faucet" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </nav>
+
+    <main>
+      <section class="hero" style="padding: 32px 0 16px;">
+        <h1 style="font-size: clamp(28px, 4vw, 40px);">API</h1>
+        <p>
+          Drip tFIL and USDFC from CLI, CI, or your own test runner.
+          The same endpoints the web UI uses, with API-key auth in
+          place of the captcha.
+        </p>
+      </section>
+
+      <!-- ── Getting a key ─────────────────────────────────────── -->
+      <section class="card api-doc-card" id="get-key">
+        <h2 class="card-title">Getting a key</h2>
+        <p class="contact-text">
+          Keys are issued out-of-band by the operator. Ping
+          <strong>@Reiers</strong> on Filecoin Slack
+          (or email <a href="mailto:nicklas@curiostorage.org">nicklas@curiostorage.org</a>)
+          with:
+        </p>
+        <ul class="api-list">
+          <li>Your name or project name</li>
+          <li>A short description of what you'll use it for (CI, test runner, CLI, etc.)</li>
+          <li>Expected drip volume per day</li>
+        </ul>
+        <p class="contact-text" style="margin-top: 8px;">
+          Default per-key allowance is <strong>50 drips per asset per 24h</strong>,
+          plenty for normal CI. Higher limits on request. Per-address
+          limits still apply (2 per asset per 24h), so a single key
+          can't be used to drain the faucet into one wallet.
+        </p>
+      </section>
+
+      <!-- ── Authentication ────────────────────────────────────── -->
+      <section class="card api-doc-card" id="auth">
+        <h2 class="card-title">Authenticating</h2>
+        <p class="contact-text">
+          Send the key as either of these headers on the drip endpoints:
+        </p>
+        <pre class="api-snippet"><code><span class="sn-flag">Authorization:</span> Bearer <span class="sn-tok">pk_yourkeyhere</span></code></pre>
+        <pre class="api-snippet"><code><span class="sn-flag">X-API-Key:</span> <span class="sn-tok">pk_yourkeyhere</span></code></pre>
+        <p class="contact-text">
+          A request that presents a valid, enabled key bypasses
+          Cloudflare Turnstile entirely. Without a key, the drip
+          endpoints require a Turnstile token from the web UI.
+        </p>
+      </section>
+
+      <!-- ── Drip endpoints ────────────────────────────────────── -->
+      <section class="card api-doc-card" id="drip">
+        <h2 class="card-title">Dripping <span class="card-subtle">POST /api/drip/{fil,usdfc}</span></h2>
+        <p class="contact-text">
+          Body:
+        </p>
+        <pre class="api-snippet"><code>{
+  <span class="sn-str">"address"</span>: <span class="sn-str">"<span class="sn-tok">0xYourAddressHere</span>"</span>
+}</code></pre>
+        <p class="contact-text">
+          tFIL accepts any of <code>0x…</code>, <code>t410f…</code>,
+          <code>t1…</code>, <code>t3…</code>, <code>t0…</code>.
+          USDFC is an ERC-20, so it only accepts <code>0x…</code> or
+          <code>t410f…</code>.
+        </p>
+        <p class="contact-text" style="margin-top: 14px;">
+          Example (tFIL):
+        </p>
+        <pre class="api-snippet"><code><span class="sn-cmd">curl</span> <span class="sn-flag">-X</span> POST <span class="sn-url">https://faucet.reiers.io/api/drip/fil</span> <span class="sn-cont">\</span>
+  <span class="sn-flag">-H</span> <span class="sn-str">'content-type: application/json'</span> <span class="sn-cont">\</span>
+  <span class="sn-flag">-H</span> <span class="sn-str">'Authorization: Bearer <span class="sn-tok">pk_yourkeyhere</span>'</span> <span class="sn-cont">\</span>
+  <span class="sn-flag">-d</span> <span class="sn-str">'{"address":"<span class="sn-tok">0xYourAddressHere</span>"}'</span></code></pre>
+        <p class="contact-text">Success response:</p>
+        <pre class="api-snippet"><code>{
+  <span class="sn-str">"ok"</span>: true,
+  <span class="sn-str">"txHash"</span>: <span class="sn-str">"0x…"</span>,
+  <span class="sn-str">"verified"</span>: true,
+  <span class="sn-str">"amount"</span>: <span class="sn-str">"5000000000000000000"</span>,
+  <span class="sn-str">"asset"</span>: <span class="sn-str">"fil"</span>
+}</code></pre>
+        <p class="contact-text">
+          <code>verified: true</code> means the server confirmed
+          on-chain that the recipient's balance moved by at least the
+          drip amount before returning.
+        </p>
+      </section>
+
+      <!-- ── Read-only endpoints ───────────────────────────────── -->
+      <section class="card api-doc-card" id="readonly">
+        <h2 class="card-title">Public read endpoints</h2>
+        <p class="contact-text">
+          No auth required. Useful for status dashboards or
+          monitoring.
+        </p>
+        <table class="api-table">
+          <thead><tr><th>Method</th><th>Path</th><th>Returns</th></tr></thead>
+          <tbody>
+            <tr><td><code>GET</code></td><td><a href="/healthz" target="_blank"><code>/healthz</code></a></td><td>liveness + dispenser balances</td></tr>
+            <tr><td><code>GET</code></td><td><a href="/api/info" target="_blank"><code>/api/info</code></a></td><td>brand, drip amounts, rate-limit defaults</td></tr>
+            <tr><td><code>GET</code></td><td><a href="/api/stats" target="_blank"><code>/api/stats</code></a></td><td>lifetime + 24h aggregate counters</td></tr>
+            <tr><td><code>GET</code></td><td><a href="/api/recent" target="_blank"><code>/api/recent</code></a></td><td>last N drips (default 10, max 50)</td></tr>
+            <tr><td><code>GET</code></td><td><code>/api/convert?address=…</code></td><td>0x ↔ t410f conversion via lotus RPC</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ── Errors ────────────────────────────────────────────── -->
+      <section class="card api-doc-card" id="errors">
+        <h2 class="card-title">Error responses</h2>
+        <p class="contact-text">
+          All errors return JSON with <code>ok: false</code> and an
+          <code>error</code> code. HTTP status reflects the class.
+        </p>
+        <table class="api-table">
+          <thead><tr><th>Status</th><th>Code</th><th>When</th></tr></thead>
+          <tbody>
+            <tr><td>400</td><td><code>bad_request</code></td><td>Body didn't parse</td></tr>
+            <tr><td>400</td><td><code>invalid_address</code></td><td>Address couldn't be classified</td></tr>
+            <tr><td>400</td><td><code>usdfc_native_unsupported</code></td><td>USDFC drip to a t1/t3 address</td></tr>
+            <tr><td>400</td><td><code>captcha</code></td><td>No API key, Turnstile token missing or invalid</td></tr>
+            <tr><td>401</td><td><code>invalid_api_key</code></td><td>Key not recognised</td></tr>
+            <tr><td>401</td><td><code>revoked_api_key</code></td><td>Key disabled by the operator</td></tr>
+            <tr><td>429</td><td><code>api_key_rate_limited</code></td><td>Per-key drip window exhausted</td></tr>
+            <tr><td>429</td><td><code>address_rate_limited</code></td><td>Per-address window exhausted</td></tr>
+            <tr><td>429</td><td><code>ip_rate_limited</code></td><td>Per-IP window exhausted (no API key)</td></tr>
+            <tr><td>503</td><td><code>faucet_dry</code></td><td>Dispenser balance below reserve</td></tr>
+            <tr><td>500</td><td><code>drip_failed</code></td><td>RPC error sending the on-chain tx</td></tr>
+          </tbody>
+        </table>
+        <p class="contact-text" style="margin-top: 14px;">
+          Every 429 includes <code>retryAtUnix</code> (epoch seconds) so
+          a retry loop knows exactly when to come back:
+        </p>
+        <pre class="api-snippet"><code>{
+  <span class="sn-str">"ok"</span>: false,
+  <span class="sn-str">"error"</span>: <span class="sn-str">"api_key_rate_limited"</span>,
+  <span class="sn-str">"scope"</span>: <span class="sn-str">"api_key"</span>,
+  <span class="sn-str">"used"</span>: 50,
+  <span class="sn-str">"max"</span>: 50,
+  <span class="sn-str">"windowSec"</span>: 86400,
+  <span class="sn-str">"retryAfterSec"</span>: 41832,
+  <span class="sn-str">"retryAtUnix"</span>: 1778709058
+}</code></pre>
+      </section>
+
+      <!-- ── Footer link to full docs ──────────────────────────── -->
+      <section class="card api-doc-card" id="more">
+        <h2 class="card-title">More</h2>
+        <p class="contact-text">
+          Full reference (every endpoint, TypeScript example,
+          shell helper for CI):
+          <a href="https://github.com/Reiers/plumbline-faucet/blob/main/docs/api.md" target="_blank" rel="noopener">docs/api.md</a>
+          on GitHub.
+        </p>
+        <p class="contact-text">
+          Source: <a href="https://github.com/Reiers/plumbline-faucet" target="_blank" rel="noopener">github.com/Reiers/plumbline-faucet</a>.
+          Issues and PRs welcome.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-row">
+        <div class="footer-brand">
+          <span>Plumbline</span>
+          ·
+          <a href="https://github.com/Reiers/plumbline-faucet" target="_blank" rel="noopener">source</a>
+          ·
+          <a href="/">faucet</a>
+        </div>
+        <div class="footer-meta">
+          <span>TSE Reiersen · Org. 929 074 912</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

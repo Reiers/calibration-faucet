@@ -10,6 +10,7 @@
 // Routes:
 //   GET  /                  static landing page (public/index.html)
 //   GET  /status            static status page  (public/status.html)
+//   GET  /api                static API docs page (public/api.html)
 //   GET  /healthz           liveness + dispenser balances
 //   GET  /api/info          public faucet metadata + live balances
 //   GET  /api/stats         lifetime + 24h aggregate counters
@@ -95,6 +96,17 @@ async function main() {
   app.get('/status', async (_req, reply) => {
     reply.header('content-type', 'text/html; charset=utf-8')
     return statusHtml
+  })
+
+  // Pretty URL for the API docs page: /api -> public/api.html
+  // Sibling to the /api/* JSON namespace; Fastify resolves exact-match
+  // routes independently so there is no collision with /api/info etc.
+  const apiDocsHtml = await import('node:fs').then((fs) =>
+    fs.promises.readFile(path.join(publicDir, 'api.html'), 'utf8'),
+  )
+  app.get('/api', async (_req, reply) => {
+    reply.header('content-type', 'text/html; charset=utf-8')
+    return apiDocsHtml
   })
 
 

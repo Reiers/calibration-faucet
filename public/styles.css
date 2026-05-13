@@ -500,3 +500,65 @@ footer a:hover { color: var(--fg); }
 .api-actions { margin-top: 0; }
 .api-actions a { color: var(--accent-2); text-decoration: none; border-bottom: 1px dashed var(--border-strong); }
 .api-actions a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* API docs page — reuses .card + .api-snippet from elsewhere; adds
+   list, table, and inline-code styles specific to the docs page. */
+.api-doc-card { margin-top: 16px; }
+.api-doc-card .card-title .card-subtle { color: var(--fg-dim); font-weight: 500; font-size: 13px; margin-left: 6px; }
+.api-list {
+  margin: 0 0 0 18px;
+  padding: 0;
+  color: var(--fg-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.api-list li { margin: 0; }
+.api-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4px 0 0;
+  font-size: 13.5px;
+}
+.api-table th,
+.api-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg-muted);
+}
+.api-table th {
+  font-weight: 600;
+  color: var(--fg);
+  border-bottom-color: var(--border-strong);
+}
+.api-table td:first-child,
+.api-table th:first-child { padding-left: 0; }
+.api-table td:last-child,
+.api-table th:last-child  { padding-right: 0; }
+.api-table tr:last-child td { border-bottom: none; }
+.api-table code {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--fg);
+}
+.api-table a { color: var(--accent-2); text-decoration: none; }
+.api-table a:hover { color: var(--accent); }
+.api-doc-card .contact-text code {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--fg);
+}
+.api-doc-card .contact-text a {
+  color: var(--accent-2);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--border-strong);
+}
+.api-doc-card .contact-text a:hover { color: var(--accent); border-bottom-color: var(--accent); }
